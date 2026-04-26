@@ -3,6 +3,8 @@
  * Handles all communication with worker service on localhost:37777
  */
 
+const DEBUG = process.env.CLAUDE_MEM_OPENCODE_DEBUG === 'true'
+
 export interface InitSessionRequest {
   contentSessionId: string
   project: string
@@ -64,7 +66,9 @@ export class WorkerClient {
       const data = await response.json()
       return data
     } catch (error) {
-      console.log('[WORKER_CLIENT] Health check failed:', error)
+      if (DEBUG) {
+        console.log('[WORKER_CLIENT] Health check failed:', error)
+      }
       return { status: 'error', version: 'unknown' }
     }
   }

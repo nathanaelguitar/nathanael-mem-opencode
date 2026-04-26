@@ -2,12 +2,12 @@
   "name": "claude-mem-opencode",
   "version": "0.0.2",
   "description": "OpenCode integration for claude-mem persistent memory",
-  "main": "./dist/bundle/index.js",
-  "types": "./dist/bundle/index.d.ts",
+  "main": "./dist/plugin.js",
+  "types": "./dist/plugin.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/bundle/index.js",
-      "types": "./dist/bundle/index.d.ts"
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts"
     },
     "./bundle": {
       "import": "./dist/bundle/opencode-mem.js"

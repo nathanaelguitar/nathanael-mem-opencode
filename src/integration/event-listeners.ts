@@ -8,6 +8,8 @@ import { SessionMapper } from './session-mapper.js'
 import { ProjectNameExtractor } from './utils/project-name.js'
 import { PrivacyTagStripper } from './utils/privacy.js'
 
+const DEBUG = process.env.CLAUDE_MEM_OPENCODE_DEBUG === 'true'
+
 let Bus: any = null
 let Session: any = null
 let MessageV2: any = null
@@ -19,7 +21,9 @@ try {
   Session = sessionModule.Session
   MessageV2 = sessionModule.MessageV2
 } catch (error) {
-  console.log('[EVENT_LISTENERS] OpenCode APIs not available - running in standalone mode')
+  if (DEBUG) {
+    console.log('[EVENT_LISTENERS] OpenCode APIs not available - running in standalone mode')
+  }
 }
 
 export class EventListeners {
@@ -41,17 +45,23 @@ export class EventListeners {
    */
   async initialize(): Promise<void> {
     if (!Bus || !Session || !MessageV2) {
-      console.log('[EVENT_LISTENERS] OpenCode APIs not available - event listeners will be initialized via manual calls')
+      if (DEBUG) {
+        console.log('[EVENT_LISTENERS] OpenCode APIs not available - event listeners will be initialized via manual calls')
+      }
       return
     }
 
-    console.log('[EVENT_LISTENERS] Initializing OpenCode event listeners...')
+    if (DEBUG) {
+      console.log('[EVENT_LISTENERS] Initializing OpenCode event listeners...')
+    }
 
     Bus.subscribe(Session.Event.Created, this.handleSessionCreated.bind(this))
     Bus.subscribe(MessageV2.Event.PartUpdated, this.handleMessagePartUpdated.bind(this))
     Bus.subscribe(Session.Event.Updated, this.handleSessionUpdated.bind(this))
 
-    console.log('[EVENT_LISTENERS] Subscribed to OpenCode Bus events')
+    if (DEBUG) {
+      console.log('[EVENT_LISTENERS] Subscribed to OpenCode Bus events')
+    }
   }
 
   /**
@@ -67,7 +77,9 @@ export class EventListeners {
     const openCodeSessionId = info.id
     const title = info.title || 'New session'
 
-    console.log(`[EVENT_LISTENERS] Session created: ${openCodeSessionId}`)
+    if (DEBUG) {
+      console.log(`[EVENT_LISTENERS] Session created: ${openCodeSessionId}`)
+    }
 
     try {
       const response = await this.workerClient.initSession({
@@ -77,8 +89,10 @@ export class EventListeners {
       })
 
       if (response.skipped) {
-        console.log(`[EVENT_LISTENERS] Session marked as private: ${openCodeSessionId}`)
-        console.log(`[EVENT_LISTENERS] Reason: ${response.reason}`)
+        if (DEBUG) {
+          console.log(`[EVENT_LISTENERS] Session marked as private: ${openCodeSessionId}`)
+          console.log(`[EVENT_LISTENERS] Reason: ${response.reason}`)
+        }
         return
       }
 
@@ -89,8 +103,10 @@ export class EventListeners {
 
       this.promptNumberTracker.set(openCodeSessionId, response.promptNumber)
 
-      console.log(`[EVENT_LISTENERS] Mapped ${openCodeSessionId} → ${response.sessionDbId}`)
-      console.log(`[EVENT_LISTENERS] Project: ${project}, Prompt #${response.promptNumber}`)
+      if (DEBUG) {
+        console.log(`[EVENT_LISTENERS] Mapped ${openCodeSessionId} → ${response.sessionDbId}`)
+        console.log(`[EVENT_LISTENERS] Project: ${project}, Prompt #${response.promptNumber}`)
+      }
     } catch (error) {
       console.error(`[EVENT_LISTENERS] Failed to initialize session ${openCodeSessionId}:`, error)
     }
@@ -118,12 +134,10 @@ export class EventListeners {
 
     const claudeMemSessionId = this.sessionMapper.getClaudeMemSessionId(sessionId)
     if (!claudeMemSessionId) {
-      console.log(`[EVENT_LISTENERS] No claude-mem session for: ${sessionId}`)
       return
     }
 
     const promptNumber = this.getPromptNumber(sessionId)
-    console.log(`[EVENT_LISTENERS] Tool usage: ${sessionId} - ${toolName}`)
 
     try {
       const strippedArgs = this.privacyStripper.stripFromJson(toolArgs)
@@ -139,7 +153,9 @@ export class EventListeners {
         timestamp: Date.now()
       })
 
-      console.log(`[EVENT_LISTENERS] Added observation: ${claudeMemSessionId} - ${toolName}`)
+      if (DEBUG) {
+        console.log(`[EVENT_LISTENERS] Added observation: ${claudeMemSessionId} - ${toolName}`)
+      }
     } catch (error) {
       console.error(`[EVENT_LISTENERS] Failed to add observation:`, error)
     }
@@ -160,17 +176,20 @@ export class EventListeners {
     }
 
     const openCodeSessionId = info.id
-    console.log(`[EVENT_LISTENERS] Session archived: ${openCodeSessionId}`)
+    if (DEBUG) {
+      console.log(`[EVENT_LISTENERS] Session archived: ${openCodeSessionId}`)
+    }
 
     const claudeMemSessionId = this.sessionMapper.getClaudeMemSessionId(openCodeSessionId)
     if (!claudeMemSessionId) {
-      console.log(`[EVENT_LISTENERS] No claude-mem session for: ${openCodeSessionId}`)
       return
     }
 
     try {
       await this.workerClient.completeSession(claudeMemSessionId)
-      console.log(`[EVENT_LISTENERS] Completed session: ${claudeMemSessionId}`)
+      if (DEBUG) {
+        console.log(`[EVENT_LISTENERS] Completed session: ${claudeMemSessionId}`)
+      }
 
       this.sessionMapper.unmapSession(openCodeSessionId)
       this.promptNumberTracker.delete(openCodeSessionId)

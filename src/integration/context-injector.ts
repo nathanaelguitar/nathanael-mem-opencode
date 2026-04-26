@@ -5,6 +5,8 @@
 import { WorkerClient } from './worker-client.js'
 import { ProjectNameExtractor } from './utils/project-name.js'
 
+const DEBUG = process.env.CLAUDE_MEM_OPENCODE_DEBUG === 'true'
+
 export class ContextInjector {
   private workerClient: WorkerClient
   private projectNameExtractor: ProjectNameExtractor
@@ -23,15 +25,18 @@ export class ContextInjector {
       const context = await this.workerClient.getProjectContext(project)
 
       if (!context || !context.trim()) {
-        console.log(`[CONTEXT_INJECTOR] No memory context available for project: ${project}`)
         return ''
       }
 
-      console.log(`[CONTEXT_INJECTOR] Injected memory context for project: ${project} (${context.length} chars)`)
+      if (DEBUG) {
+        console.log(`[CONTEXT_INJECTOR] Injected memory context for project: ${project} (${context.length} chars)`)
+      }
 
       return context
     } catch (error) {
-      console.warn(`[CONTEXT_INJECTOR] Failed to inject memory context for project: ${project}`, error)
+      if (DEBUG) {
+        console.warn(`[CONTEXT_INJECTOR] Failed to inject memory context for project: ${project}`, error)
+      }
       return ''
     }
   }

@@ -2,6 +2,8 @@
  * Map OpenCode session IDs to claude-mem session IDs
  */
 
+const DEBUG = process.env.CLAUDE_MEM_OPENCODE_DEBUG === 'true'
+
 export class SessionMapper {
   private mapping: Map<string, number> = new Map()
 
@@ -10,7 +12,9 @@ export class SessionMapper {
    */
   mapOpenCodeToClaudeMem(openCodeSessionId: string, claudeMemSessionId: number): void {
     this.mapping.set(openCodeSessionId, claudeMemSessionId)
-    console.log(`[SESSION_MAPPER] Mapped ${openCodeSessionId} → ${claudeMemSessionId}`)
+    if (DEBUG) {
+      console.log(`[SESSION_MAPPER] Mapped ${openCodeSessionId} → ${claudeMemSessionId}`)
+    }
   }
 
   /**
@@ -37,7 +41,9 @@ export class SessionMapper {
    */
   unmapSession(openCodeSessionId: string): void {
     this.mapping.delete(openCodeSessionId)
-    console.log(`[SESSION_MAPPER] Unmapped ${openCodeSessionId}`)
+    if (DEBUG) {
+      console.log(`[SESSION_MAPPER] Unmapped ${openCodeSessionId}`)
+    }
   }
 
   /**
@@ -66,6 +72,8 @@ export class SessionMapper {
    */
   clear(): void {
     this.mapping.clear()
-    console.log('[SESSION_MAPPER] Cleared all mappings')
+    if (DEBUG) {
+      console.log('[SESSION_MAPPER] Cleared all mappings')
+    }
   }
 }

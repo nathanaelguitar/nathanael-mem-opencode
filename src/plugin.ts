@@ -1,5 +1,7 @@
 import { ClaudeMemIntegration } from './integration/index.js'
 
+const DEBUG = process.env.CLAUDE_MEM_OPENCODE_DEBUG === 'true'
+
 export default async function plugin(input: {
   client: any
   project: any
@@ -8,13 +10,17 @@ export default async function plugin(input: {
   serverUrl: URL
   $: any
 }) {
-  console.log('[CLAUDE_MEM_OPENCODE] Plugin loaded')
+  if (DEBUG) {
+    console.log('[CLAUDE_MEM_OPENCODE] Plugin loaded')
+  }
 
   const integration = new ClaudeMemIntegration()
 
   try {
     await integration.initialize()
-    console.log('[CLAUDE_MEM_OPENCODE] ✅ Integration initialized')
+    if (DEBUG) {
+      console.log('[CLAUDE_MEM_OPENCODE] ✅ Integration initialized')
+    }
   } catch (error) {
     console.error('[CLAUDE_MEM_OPENCODE] ❌ Initialization failed:', error)
   }

@@ -11,6 +11,8 @@ import { ProjectNameExtractor } from './utils/project-name.js'
 import { PrivacyTagStripper } from './utils/privacy.js'
 import { Logger, LogLevel } from './utils/logger.js'
 
+const DEBUG = process.env.CLAUDE_MEM_OPENCODE_DEBUG === 'true'
+
 export class ClaudeMemIntegration {
   private workerClient: WorkerClient
   private eventListeners: EventListeners
@@ -37,13 +39,17 @@ export class ClaudeMemIntegration {
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
-      console.log('[CLAUDE_MEM] Integration already initialized')
+      if (DEBUG) {
+        console.log('[CLAUDE_MEM] Integration already initialized')
+      }
       return
     }
 
     try {
-      console.log('[CLAUDE_MEM] Initializing claude-mem integration...')
-      console.log(`[CLAUDE_MEM] Worker port: ${this.workerClient.getPort() || '37777'}`)
+      if (DEBUG) {
+        console.log('[CLAUDE_MEM] Initializing claude-mem integration...')
+        console.log(`[CLAUDE_MEM] Worker port: ${this.workerClient.getPort() || '37777'}`)
+      }
 
       const ready = await this.workerClient.waitForReady(30000)
 
@@ -51,17 +57,23 @@ export class ClaudeMemIntegration {
         throw new Error('Worker service not ready after 30s. Is worker running?')
       }
 
-      console.log('[CLAUDE_MEM] Worker service is ready')
+      if (DEBUG) {
+        console.log('[CLAUDE_MEM] Worker service is ready')
+      }
 
       await this.eventListeners.initialize()
       
       this.initialized = true
       this.memoryAvailable = true
-      console.log('[CLAUDE_MEM] Integration initialized successfully')
-      console.log('[CLAUDE_MEM] Project:', this.projectNameExtractor.getCurrentProject())
+      if (DEBUG) {
+        console.log('[CLAUDE_MEM] Integration initialized successfully')
+        console.log('[CLAUDE_MEM] Project:', this.projectNameExtractor.getCurrentProject())
+      }
     } catch (error) {
       console.error('[CLAUDE_MEM] Initialization failed:', error)
-      console.warn('[CLAUDE_MEM] Continuing anyway, but expect potential issues')
+      if (DEBUG) {
+        console.warn('[CLAUDE_MEM] Continuing anyway, but expect potential issues')
+      }
       this.memoryAvailable = false
     }
   }
